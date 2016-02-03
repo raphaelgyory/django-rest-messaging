@@ -1,9 +1,9 @@
 <div class="badges">
     <a href="http://travis-ci.org/raphaelgyory/django-rest-messaging-centrifugo">
-        <img src="https://travis-ci.org/raphaelgyory/django-rest-messaging.svg?branch=master">
+        <img src="https://travis-ci.org/raphaelgyory/django-rest-messaging-centrifugo.svg?branch=master">
     </a>
     <a href="https://pypi.python.org/pypi/django-rest-messaging-centrifugo">
-        <img src="https://img.shields.io/pypi/v/django-rest-messaging.svg">
+        <img src="https://img.shields.io/pypi/v/django-rest-messaging-centrifugo.svg">
     </a>
 </div>
 
