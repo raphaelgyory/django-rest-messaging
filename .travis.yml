@@ -1,8 +1,5 @@
 language: python
 
-python:
-  - "3.5"
-
 sudo: false
 
 env:
@@ -53,6 +50,13 @@ env:
 
 matrix:
   fast_finish: true
+
+addons:
+  apt:
+    sources:
+      - deadsnakes
+    packages:
+      - python3.5
 
 install:
   # Virtualenv < 14 is required to keep the Python 3.2 builds running.
