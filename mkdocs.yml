@@ -1,0 +1,10 @@
+site_name: Django Rest Messaging
+site_description: The project provides a Facebook-like messaging API for django rest framework.
+repo_url: https://github.com/raphaelgyory/django-rest-messaging
+site_dir: html
+theme: yeti
+pages:
+- The project: index.md
+- REST: django-rest-messaging.md
+- Real-time: django-rest-messaging-centrifugo.md
+- React.js: django-rest-messaging-js.md
