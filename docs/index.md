@@ -11,7 +11,7 @@
 
 # Django rest messaging
 
-The project provides a pluggable Facebook-like messaging API for Django Rest Framework.
+The project provides a pluggable Facebook-like messaging service for Django Rest Framework.
 
 This is a first release (you know, "Release Early, Release Often"...). The backend is fully tested - and working - and the javascript frontend is under way.
 I coded this in a lean perspective and want to see if the project sparks some interest. Any comments and suggestions are therefore very welcome!
