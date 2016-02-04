@@ -2,7 +2,7 @@ django-rest-messaging
 ======================================
 
 |build-status-image| |pypi-version|
-
+[![Coverage Status](https://coveralls.io/repos/github/raphaelgyory/django-rest-messaging/badge.svg?branch=master)](https://coveralls.io/github/raphaelgyory/django-rest-messaging?branch=master)
 Overview
 --------
 

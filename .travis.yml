@@ -65,8 +65,8 @@ script:
     - tox -e $TOX_ENV
 
 after_success:
-    - pip install codecov
-    - codecov -e TOX_ENV
+    - pip install coveralls
+    - coveralls
 
 deploy:
   provider: pypi
