@@ -60,12 +60,13 @@ addons:
 
 install:
     - pip install tox
+    - pip install coveralls
 
 script:
     - tox -e $TOX_ENV
+    - coverage run --source=rest_messaging setup.py test
 
 after_success:
-    - pip install coveralls
     - coveralls
 
 deploy:
