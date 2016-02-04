@@ -1,62 +1,73 @@
 language: python
+
 sudo: false
+
 env:
-- TOX_ENV=py27-flake8
-- TOX_ENV=py27-docs
-- TOX_ENV=py35-django19-drf33
-- TOX_ENV=py35-django18-drf33
-- TOX_ENV=py35-django18-drf32
-- TOX_ENV=py35-django18-drf31
-- TOX_ENV=py35-django18-drf30
-- TOX_ENV=py34-django19-drf33
-- TOX_ENV=py34-django18-drf33
-- TOX_ENV=py34-django18-drf32
-- TOX_ENV=py34-django18-drf31
-- TOX_ENV=py34-django18-drf30
-- TOX_ENV=py34-django17-drf33
-- TOX_ENV=py34-django17-drf32
-- TOX_ENV=py34-django17-drf31
-- TOX_ENV=py34-django17-drf30
-- TOX_ENV=py34-django17-drf24
-- TOX_ENV=py33-django18-drf33
-- TOX_ENV=py33-django18-drf32
-- TOX_ENV=py33-django18-drf31
-- TOX_ENV=py33-django18-drf30
-- TOX_ENV=py33-django17-drf33
-- TOX_ENV=py33-django17-drf32
-- TOX_ENV=py33-django17-drf31
-- TOX_ENV=py33-django17-drf30
-- TOX_ENV=py33-django17-drf24
-- TOX_ENV=py33-django16-drf32
-- TOX_ENV=py33-django16-drf31
-- TOX_ENV=py33-django16-drf30
-- TOX_ENV=py33-django16-drf24
-- TOX_ENV=py27-django19-drf33
-- TOX_ENV=py27-django18-drf33
-- TOX_ENV=py27-django18-drf32
-- TOX_ENV=py27-django18-drf31
-- TOX_ENV=py27-django18-drf30
-- TOX_ENV=py27-django17-drf33
-- TOX_ENV=py27-django17-drf32
-- TOX_ENV=py27-django17-drf31
-- TOX_ENV=py27-django17-drf30
-- TOX_ENV=py27-django17-drf24
-- TOX_ENV=py27-django16-drf32
-- TOX_ENV=py27-django16-drf31
-- TOX_ENV=py27-django16-drf30
-- TOX_ENV=py27-django16-drf24
+    - TOX_ENV=py27-flake8
+    - TOX_ENV=py27-docs
+    - TOX_ENV=py35-django19-drf33
+    - TOX_ENV=py35-django18-drf33
+    - TOX_ENV=py35-django18-drf32
+    - TOX_ENV=py35-django18-drf31
+    - TOX_ENV=py35-django18-drf30
+    - TOX_ENV=py34-django19-drf33
+    - TOX_ENV=py34-django18-drf33
+    - TOX_ENV=py34-django18-drf32
+    - TOX_ENV=py34-django18-drf31
+    - TOX_ENV=py34-django18-drf30
+    - TOX_ENV=py34-django17-drf33
+    - TOX_ENV=py34-django17-drf32
+    - TOX_ENV=py34-django17-drf31
+    - TOX_ENV=py34-django17-drf30
+    - TOX_ENV=py34-django17-drf24
+    - TOX_ENV=py33-django18-drf33
+    - TOX_ENV=py33-django18-drf32
+    - TOX_ENV=py33-django18-drf31
+    - TOX_ENV=py33-django18-drf30
+    - TOX_ENV=py33-django17-drf33
+    - TOX_ENV=py33-django17-drf32
+    - TOX_ENV=py33-django17-drf31
+    - TOX_ENV=py33-django17-drf30
+    - TOX_ENV=py33-django17-drf24
+    - TOX_ENV=py33-django16-drf32
+    - TOX_ENV=py33-django16-drf31
+    - TOX_ENV=py33-django16-drf30
+    - TOX_ENV=py33-django16-drf24
+    - TOX_ENV=py27-django19-drf33
+    - TOX_ENV=py27-django18-drf33
+    - TOX_ENV=py27-django18-drf32
+    - TOX_ENV=py27-django18-drf31
+    - TOX_ENV=py27-django18-drf30
+    - TOX_ENV=py27-django17-drf33
+    - TOX_ENV=py27-django17-drf32
+    - TOX_ENV=py27-django17-drf31
+    - TOX_ENV=py27-django17-drf30
+    - TOX_ENV=py27-django17-drf24
+    - TOX_ENV=py27-django16-drf32
+    - TOX_ENV=py27-django16-drf31
+    - TOX_ENV=py27-django16-drf30
+    - TOX_ENV=py27-django16-drf24
+
 matrix:
   fast_finish: true
+
 addons:
   apt:
     sources:
-    - deadsnakes
+        - deadsnakes
     packages:
-    - python3.5
+        - python3.5
+
 install:
-- pip install tox
+    - pip install tox
+
 script:
-- tox -e $TOX_ENV
+    - tox -e $TOX_ENV
+
+after_success:
+    - pip install codecov
+    - codecov -e TOX_ENV
+
 deploy:
   provider: pypi
   user: RaphaelGyory
