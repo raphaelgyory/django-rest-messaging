@@ -64,7 +64,8 @@ install:
 
 script:
     - tox -e $TOX_ENV
-    - coverage run --source=rest_messaging setup.py test
+    - chmod +x runtests.py
+    - coverage ./runtests.py run --source=rest_messaging
 
 after_success:
     - coveralls
