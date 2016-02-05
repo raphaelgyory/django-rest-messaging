@@ -1,0 +1,12 @@
+[run]
+source = django-rest-messaging,rest_messaging
+
+[report]
+omit =
+    */tests*
+    */migrations/*
+    *__init__.py*
+    */settings/*
+    *wsgi.py*
+    *admin.py*
+
