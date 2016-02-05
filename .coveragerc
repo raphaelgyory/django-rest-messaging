@@ -1,5 +1,4 @@
 [run]
-source = rest_messaging
 omit =
     */migrations/*
     *__init__.py*
