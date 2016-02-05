@@ -61,6 +61,8 @@ addons:
 install:
     - pip install tox
     - pip install -r requirements.txt
+    - pip install pytest-django
+    - pip install flake8
     - pip install coveralls
 
 script:
