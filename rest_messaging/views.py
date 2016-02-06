@@ -9,7 +9,7 @@ from django.utils.timezone import now
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response
-from rest_messaging.compat import compat_get_request_data, compat_serializer_check_is_valid, compat_thread_serializer_set, compat_perform_update
+from rest_messaging.compat import compat_get_paginated_response, compat_get_request_data, compat_serializer_check_is_valid, compat_thread_serializer_set, compat_perform_update
 from rest_messaging.models import Message, NotificationCheck, Participant, Thread
 from rest_messaging.permissions import IsInThread
 from rest_messaging.serializers import MessageNotificationCheckSerializer, ComplexMessageSerializer, SimpleMessageSerializer, ThreadSerializer
@@ -131,8 +131,7 @@ class MessageView(mixins.ListModelMixin,
         messages = Message.managers.get_all_messages_in_thread(participant_id=request.rest_messaging_participant.id, thread_id=thread.id, check_who_read=True)
         page = self.paginate_queryset(messages)
         if page is not None:
-            serializer = ComplexMessageSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+            return compat_get_paginated_response(self, page)
         serializer = ComplexMessageSerializer(messages, many=True)
         return Response(serializer.data)
 

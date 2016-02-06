@@ -45,9 +45,13 @@ def pytest_configure():
             'django.contrib.auth.hashers.MD5PasswordHasher',
             'django.contrib.auth.hashers.CryptPasswordHasher',
         ),
-        REST_FRAMEWORK = {
+        REST_FRAMEWORK={
             'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-            'PAGE_SIZE': 100
+            'PAGE_SIZE': 100,
+            'DEFAULT_PAGINATION_SERIALIZER_CLASS': 'rest_framework.pagination.PaginationSerializer',  # 3.0
+            'PAGINATE_BY_PARAM': 100,  # 3.0
+            'PAGINATE_BY': 10,  # 3.0
+            'MAX_PAGINATE_BY': 100  # 3.0
         }
     )
 
