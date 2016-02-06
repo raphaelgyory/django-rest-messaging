@@ -103,7 +103,7 @@ class MessageView(mixins.ListModelMixin,
         check_notifications = self.request.GET.get("check_notifications", True)
         messages = Message.managers.get_lasts_messages_of_threads(self.request.rest_messaging_participant.id, check_who_read=True, check_is_notification=check_notifications)
         return messages
-
+    
     @detail_route(methods=['post'], permission_classes=[IsInThread], serializer_class=SimpleMessageSerializer)
     def post_message(self, request, pk=None):
         """ Pk is the pk of the Thread to which the message belongs. """

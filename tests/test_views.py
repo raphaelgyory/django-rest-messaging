@@ -153,7 +153,8 @@ class MessageViewTests(TestScenario):
         p2.save()
         response = self.client_authenticated.get(self.url)
         self.assertEqual(200, response.status_code)
-        messages = parse_json_response(response.data)
+        messages_dct = parse_json_response(response.data)
+        messages = messages_dct["results"]
         self.assertEqual(3, len(messages))
         self.assertEqual(messages[0]["id"], self.m33.id)
         self.assertEqual(messages[1]["id"], self.m22.id)
@@ -201,7 +202,8 @@ class MessageViewTests(TestScenario):
         self.m32.sent_at = p1.date_last_check = now() - timedelta(days=1, hours=12)
         self.m32.save()
         response = self.client_authenticated.get("{0}{1}/list_messages_in_thread/".format(self.url, self.thread3.id))
-        messages = parse_json_response(response.data)
+        messages_dct = parse_json_response(response.data)
+        messages = messages_dct["results"]
         self.assertEqual([self.m33.id, self.m32.id, self.m31.id], [m["id"] for m in messages])
         self.assertEqual([set([]), set([self.participant3.id]), set([self.participant1.id, self.participant3.id])], [set(m["readers"]) for m in messages])
 
