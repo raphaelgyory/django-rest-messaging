@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.db import models
 from django.db.models import Count, Max
+from django.db.models.signals import post_save, pre_save
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import now, timedelta
 
@@ -38,7 +39,9 @@ class ThreadManager(models.Manager):
             distinct().\
             select_related('thread')
 
-        return [p.thread for p in participations]
+        return Thread.objects.\
+            filter(id__in=[p.thread.id for p in participations]).\
+            distinct()
 
     def get_active_threads_involving_all_participants(self, *participant_ids):
         """ Gets the threads where the specified participants are active and no one has left. """
@@ -70,6 +73,10 @@ class ThreadManager(models.Manager):
         if request.rest_messaging_participant.id not in participant_ids:
             participant_ids.append(request.rest_messaging_participant.id)
 
+        # we need at least one other participant
+        if len(participant_ids) < 2:
+            raise Exception('At least two participants are required.')
+
         if getattr(settings, "REST_MESSAGING_THREAD_UNIQUE_FOR_ACTIVE_RECIPIENTS", True) is True:
             # if we limit the number of threads by active participants
             # we ensure a thread is not already running
@@ -82,6 +89,9 @@ class ThreadManager(models.Manager):
 
         # we add the participants
         thread.add_participants(request, *participant_ids)
+
+        # we send a signal to say the thread with participants is created
+        post_save.send(Thread, instance=thread, created=True, created_and_add_participants=True, request_participant_id=request.rest_messaging_participant.id)
 
         return thread
 
@@ -104,9 +114,11 @@ class Thread(models.Model):
         participants = self.participants.all()
         try:
             current = Participant.objects.get(id=request.user.id)
-            return current in participants
+            if current in participants:
+                return current
         except:
-            return False
+            pass
+        return False
 
     def add_participants(self, request, *participants_ids):
         """
@@ -122,6 +134,8 @@ class Thread(models.Model):
             ids.append(participant_id)
 
         Participation.objects.bulk_create(participations)
+        post_save.send(Thread, instance=self, created=True, created_and_add_participants=True, request_participant_id=request.rest_messaging_participant.id)
+
         return ids
 
     def _limit_participants(self, request, *participants_ids):
@@ -138,20 +152,26 @@ class Thread(models.Model):
         return lst
 
     def remove_participant(self, request, participant):
-        bool_may_remove = getattr(settings, 'REST_MESSAGING_REMOVE_PARTICIPANTS_CALLBACK', self._can_remove_oneself_only)(request, participant)
-        if bool_may_remove is True:
+        removable_participants_ids = self.get_removable_participants_ids(request)
+        if participant.id in removable_participants_ids:
             participation = Participation.objects.get(participant=participant, thread=self, date_left=None)
             participation.date_left = now()
             participation.save()
+            post_save.send(Thread, instance=self, created=False, remove_participant=True, removed_participant=participant, request_participant_id=request.rest_messaging_participant.id)
             return participation
         else:
             raise Exception('The participant may not be removed.')
 
+    def get_removable_participants_ids(self, request):
+        removable_participants_ids = getattr(settings, 'REST_MESSAGING_REMOVE_PARTICIPANTS_CALLBACK', self._can_remove_oneself_only)(request, self)
+        return removable_participants_ids
+
     def _can_remove_oneself_only(self, request, participant):
         """ By default, we ensure request.user can only remove oneself. """
-        if self.is_participant(request) and Participant.objects.get(id=request.user.id) == participant:
-            return True
-        return False
+        try:
+            return [self.is_participant(request).id]
+        except:
+            return []
 
 
 class Participation(models.Model):
@@ -212,7 +232,7 @@ class MessageManager(models.Manager):
         # we get the last message for each thread
         # we must query the messages using two queries because only Postgres supports .order_by('thread', '-sent_at').distinct('thread')
         threads = Thread.managers.\
-            get_threads_for_participant(participant_id).\
+            get_threads_where_participant_is_active(participant_id).\
             annotate(last_message_id=Max('message__id'))
         messages = Message.objects.filter(id__in=[thread.last_message_id for thread in threads]).\
             order_by('-id').\

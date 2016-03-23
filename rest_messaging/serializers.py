@@ -11,10 +11,11 @@ from rest_messaging.models import Message, NotificationCheck, Thread
 class ThreadSerializer(serializers.ModelSerializer):
 
     participants = compat_serializer_method_field("get_participants")
+    removable_participants_ids = compat_serializer_method_field("get_removable_participants_ids")
 
     class Meta:
         model = Thread
-        fields = ('id', 'name', 'participants')
+        fields = ('id', 'name', 'participants', 'removable_participants_ids')
 
     def __init__(self, *args, **kwargs):
         # Don't pass the 'callback' arg up to the superclass
@@ -30,6 +31,10 @@ class ThreadSerializer(serializers.ModelSerializer):
         else:
             # we do not want user information
             return self.callback(obj)
+
+    def get_removable_participants_ids(self, obj):
+        """ Get the participants that can be removed from the thread. """
+        return obj.get_removable_participants_ids(self.context.get('request', None))
 
 
 class SimpleMessageSerializer(serializers.ModelSerializer):

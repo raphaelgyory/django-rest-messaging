@@ -13,6 +13,7 @@ router = routers.SimpleRouter()
 router.register(r'threads', views.ThreadView, 'threads')
 router.register(r'messages', views.MessageView, 'messages')
 router.register(r'notifications', views.NotificationCheckView, 'notifications')
+router.register(r'authentication', views.ParticipantAuthenticationView, 'authentication')
 
 # API endpoints, determined automatically by the router.
 urlpatterns = [

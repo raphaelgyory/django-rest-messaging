@@ -9,10 +9,11 @@ from django.utils.timezone import now
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response
-from rest_messaging.compat import compat_get_paginated_response, compat_get_request_data, compat_serializer_check_is_valid, compat_thread_serializer_set, compat_perform_update
-from rest_messaging.models import Message, NotificationCheck, Participant, Thread
+from rest_messaging.compat import compat_get_paginated_response, compat_get_request_data, compat_pagination_messages, compat_serializer_check_is_valid, compat_thread_serializer_set, compat_perform_update
+from rest_messaging.models import Message, NotificationCheck, Participant, Participation, Thread
 from rest_messaging.permissions import IsInThread
 from rest_messaging.serializers import MessageNotificationCheckSerializer, ComplexMessageSerializer, SimpleMessageSerializer, ThreadSerializer
+import json
 
 
 class ThreadView(mixins.RetrieveModelMixin,
@@ -29,7 +30,7 @@ class ThreadView(mixins.RetrieveModelMixin,
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = ThreadSerializer(instance, callback=getattr(settings, 'REST_MESSAGING_SERIALIZE_PARTICIPANTS_CALLBACK', None))  # self.get_serializer will raise an error in DRF 2.4
+        serializer = ThreadSerializer(instance, callback=getattr(settings, 'REST_MESSAGING_SERIALIZE_PARTICIPANTS_CALLBACK', None), context={'request': request})  # self.get_serializer will raise an error in DRF 2.4
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
@@ -41,7 +42,7 @@ class ThreadView(mixins.RetrieveModelMixin,
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, request, serializer):
-        participants_ids = compat_get_request_data(self.request).getlist('participants')
+        participants_ids = json.loads(compat_get_request_data(self.request).get('participants'))
         thread = Thread.managers.get_or_create_thread(self.request, compat_get_request_data(self.request).get('name'), *participants_ids)
         setattr(serializer, compat_thread_serializer_set(), thread)
 
@@ -66,7 +67,7 @@ class ThreadView(mixins.RetrieveModelMixin,
         thread = Thread.objects.get(id=pk)
         self.check_object_permissions(request, thread)
         # we get the participants and add them
-        participants_ids = compat_get_request_data(self.request).getlist('participants')
+        participants_ids = json.loads(compat_get_request_data(self.request).get('participants'))
         thread.add_participants(request, *participants_ids)
         # we return the thread
         serializer = self.get_serializer(thread)
@@ -77,7 +78,7 @@ class ThreadView(mixins.RetrieveModelMixin,
         # we get the thread and check for permission
         thread = Thread.objects.get(id=pk)
         self.check_object_permissions(request, thread)
-        # we get the participants
+        # we get the participant
         participant_id = compat_get_request_data(self.request).get('participant')
         participant = Participant.objects.get(id=participant_id)
         # we remove him if thread.remove_participant allows us to
@@ -89,7 +90,38 @@ class ThreadView(mixins.RetrieveModelMixin,
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+    @detail_route(methods=['get'])
+    def get_removable_participants_ids(self, request, pk=None):
+        # we get the thread and check for permission
+        thread = Thread.objects.get(id=pk)
+        self.check_object_permissions(request, thread)
+        # we get the removable participants
+        removable_participants_ids = thread.get_removable_participants_ids(request)
+        # we remove him if thread.remove_participant allows us to
+        try:
+            return Response({'participants': removable_participants_ids})
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
+    @detail_route(methods=['post'])
+    def mark_thread_as_read(self, request, pk=None):
+        """ Pk is the pk of the Thread to which the messages belong. """
+        # we get the thread and check for permission
+        thread = Thread.objects.get(id=pk)
+        self.check_object_permissions(request, thread)
+        # we save the date
+        try:
+            participation = Participation.objects.get(thread=thread, participant=request.rest_messaging_participant)
+            participation.date_last_check = now()
+            participation.save()
+            # we return the thread
+            serializer = self.get_serializer(thread)
+            return Response(serializer.data)
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+@compat_pagination_messages
 class MessageView(mixins.ListModelMixin,
                   viewsets.GenericViewSet):
     """ The view only lists and creates. """
@@ -158,3 +190,15 @@ class NotificationCheckView(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         serializer = self.get_serializer(nc)
         return Response(serializer.data, status=status_code)
+
+
+class ParticipantAuthenticationView(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+    View that simply return the participant id of the user as set by the middleware, if it exists.
+    """
+
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def list(self, request, *args, **kwargs):
+        participant = Participant.objects.get(id=self.request.rest_messaging_participant.id)
+        return Response({'id': participant.id})

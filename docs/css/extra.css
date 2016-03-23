@@ -21,3 +21,19 @@ body.homepage .badges a img {
     padding: 0;
     margin: 0;
 }
+
+.navbar {
+	background-color: white;
+}
+
+.navbar-brand {
+	color:rgba(0,0,0,0.9) !important;
+}
+
+.navbar-nav > li > a {
+	color:rgba(0,0,0,0.9) !important;
+}
+
+pre, .well {
+	background-color: white;
+}

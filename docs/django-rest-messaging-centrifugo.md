@@ -5,6 +5,9 @@
     <a href="https://pypi.python.org/pypi/django-rest-messaging-centrifugo">
         <img src="https://img.shields.io/pypi/v/django-rest-messaging-centrifugo.svg">
     </a>
+    <a href="https://coveralls.io/github/raphaelgyory/django-rest-messaging-centrifugo?branch=master">
+        <img src="https://coveralls.io/repos/github/raphaelgyory/django-rest-messaging-centrifugo/badge.svg?branch=master">
+    </a>
 </div>
 
 
@@ -23,11 +26,18 @@ The django-rest-messaging-centrifugo module extends the django-rest-messaging mo
 
 ### Install centrifugo
 
-Download centrifugo as expplained [here](https://fzambia.gitbooks.io/centrifugal/content/server/start.html), and move it to /usr/bin/. You shuold have a /usr/bin/centrifugo executable. You can now check the installation is successfull by running
+Download centrifugo as expplained [here](https://fzambia.gitbooks.io/centrifugal/content/server/start.html), and move it to /usr/bin/. For example, installing the 64 bits version can be done with the following commands:
 
 ```bash
-$ cd /usr/bin
-$ ./centrifugo -h
+$ wget https://github.com/centrifugal/centrifugo/releases/download/v1.3.3/centrifugo-1.3.3-linux-amd64.zip
+$ unzip centrifugo-1.3.3-linux-amd64.zip
+$ sudo mv centrifugo-1.3.3-linux-amd64/centrifugo /usr/bin/centrifugo
+```
+
+You should have a /usr/bin/centrifugo executable. You can now check the installation is successfull by running
+
+```bash
+$ centrifugo -h
 ```
 
 ### Create a config.json file
@@ -60,12 +70,10 @@ Create a config.json file. You can copy the following one (just change the "secr
 
 ### Launch centrifugo
 
-Download centrifugo as expplained [here](https://fzambia.gitbooks.io/centrifugal/content/server/start.html), and move it to /usr/bin/. You should have a /usr/bin/centrifugo executable. You can now check the installation is successfull by running 
-
 ```bash
 # /usr/bin
 # port 8802 is for example purpose only. Note that centrifugo runs by default on port 8000, which can compete with your regular Django port
-$ ./centrifugo --config=/path/to/config.json --port=8802 
+$ centrifugo --config=/path/to/config.json --port=8802 
 ```
 
 There are other command line options (address, engine etc.). See [here](https://fzambia.gitbooks.io/centrifugal/content/server/configuration.html).
@@ -105,14 +113,19 @@ Add additionnal configuration.
 # settings.py
 
 # django-rest-messaging-centrifugo config
-CENTRIFUGO_PORT = 8802 # the port on which centrifugo shall run, as set in config.json (see above)
-CENTRIFUGO_MESSAGE_NAMESPACE = "messages" # the centrifugo message channel, do not change this value
-CENTRIFUGO_THREAD_NAMESPACE = "threads" # the centrifugo thread channel, do not change this value
+# the port on which centrifugo shall run, as set in config.json (see above)
+CENTRIFUGO_PORT = 8802
+# the centrifugo message channel, do not change this value
+CENTRIFUGO_MESSAGE_NAMESPACE = "messages"
+# the centrifugo thread channel, do not change this value
+CENTRIFUGO_THREAD_NAMESPACE = "threads"
 # centrifugo config
 # note that the following settings refer to centrifugE_... 
 # because it is the old name of the project
-CENTRIFUGE_ADDRESS = 'http://localhost:{0}/'.format(CENTRIFUGO_PORT) # change this to your domain/your port in production
-CENTRIFUGE_SECRET = 'secret' # change this to the key you put in config.json (see above)
+# change this to your domain/your port in production
+CENTRIFUGE_ADDRESS = 'http://localhost:{0}/'.format(CENTRIFUGO_PORT)
+# change this to the key you put in config.json (see above)
+CENTRIFUGE_SECRET = 'secret'
 CENTRIFUGE_TIMEOUT = 5 
 
 ```
@@ -132,10 +145,9 @@ urlpatterns = [
 
 ```
 
-## Examples
+## Deployment
 
-A full example will be available when the javascript consumer will be available. In the meantime, you can refer to the tests: django-rest-messaging-centrifugo/tests/test_integration.py and django-rest-messaging-centrifugo/tests/templates/tests/index.html go through the whole process of starting connections, identifying available channels and publishing new messages. 
-
+Please refer to the centrifugo doc for [scaling](https://fzambia.gitbooks.io/centrifugal/content/deploy/nginx.html) and this discussion for [SSL configuration](https://github.com/centrifugal/centrifugo/issues/27).
 
 ## Testing
 
@@ -156,7 +168,3 @@ You can also use the excellent [tox](http://tox.readthedocs.org/en/latest/) test
 ```bash
 $ tox
 ```
-
-## Documentation
-
-The documentation of the whole project has been included in django-rest-messaging, on which the other modules rely.

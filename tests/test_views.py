@@ -13,6 +13,8 @@ from rest_messaging.models import Message, NotificationCheck, Participation, Thr
 
 from .utils import TestScenario, parse_json_response
 
+import json
+
 
 class ThreadViewTests(TestScenario):
 
@@ -31,6 +33,7 @@ class ThreadViewTests(TestScenario):
         response = self.client_authenticated.get("{0}{1}/".format(self.url, self.thread1.id))
         self.assertEqual(200, response.status_code)
         self.assertEqual(set(parse_json_response(response.data)["participants"]), set([self.participant1.id, self.participant2.id, self.participant3.id]))  # we do not care about ordering
+        self.assertEqual(parse_json_response(response.data)["removable_participants_ids"], [self.participant1.id])
 
     @override_settings(REST_MESSAGING_SERIALIZE_PARTICIPANTS_CALLBACK=lambda *args, **kwargs: ["a", "b", "c"])
     def test_retrieve_callback(self):
@@ -46,7 +49,7 @@ class ThreadViewTests(TestScenario):
         self.assertEqual(405, response.status_code)
 
     def test_create(self):
-        data = {"name": "Thread name", "participants": [self.participant3.id, self.participant5.id]}  # self.participant1.id  will be added automatically since he is requets.user
+        data = {"name": "Thread name", "participants": json.dumps([self.participant3.id, self.participant5.id])}  # self.participant1.id  will be added automatically since he is requets.user
         response = self.client_unauthenticated.post(self.url)
         self.assertEqual(403, response.status_code)
         # we ensure a new thread is created
@@ -99,7 +102,7 @@ class ThreadViewTests(TestScenario):
         response = self.client_authenticated.post("{0}{1}/add_participants/".format(self.url, self.thread_unrelated.id), data={})
         self.assertEqual(403, response.status_code)
         # ok
-        data = {"participants": [self.participant1.id, self.participant3.id, self.participant5.id]}
+        data = {"participants": json.dumps([self.participant1.id, self.participant3.id, self.participant5.id])}
         response = self.client_authenticated.post("{0}{1}/add_participants/".format(self.url, self.thread1.id), data=data)
         self.assertEqual(200, response.status_code)
         parsed = parse_json_response(response.data)
@@ -131,6 +134,46 @@ class ThreadViewTests(TestScenario):
         # ... but he has left
         p = Participation.objects.get(participant=self.participant1, thread=self.thread1)
         self.assertNotEqual(p.date_left, None)
+
+    def test_get_removable_participants_ids(self):
+        # no authentication
+        response = self.client_unauthenticated.get("{0}{1}/get_removable_participants_ids/".format(self.url, self.thread1.id), data={})
+        self.assertEqual(403, response.status_code)
+        # no permission
+        response = self.client_authenticated.get("{0}{1}/get_removable_participants_ids/".format(self.url, self.thread_unrelated.id), data={})
+        self.assertEqual(403, response.status_code)
+        # ok
+        response = self.client_authenticated.get("{0}{1}/get_removable_participants_ids/".format(self.url, self.thread1.id), data={})
+        self.assertEqual(200, response.status_code)
+        parsed = parse_json_response(response.data)
+        self.assertEqual(parsed["participants"], [self.participant1.id])
+
+    @override_settings(REST_MESSAGING_REMOVE_PARTICIPANTS_CALLBACK=lambda *args, **kwargs: [3, 4, 5])
+    def test_get_removable_participants_ids_with_callback(self):
+        # no authentication
+        response = self.client_unauthenticated.get("{0}{1}/get_removable_participants_ids/".format(self.url, self.thread1.id), data={})
+        self.assertEqual(403, response.status_code)
+        # no permission
+        response = self.client_authenticated.get("{0}{1}/get_removable_participants_ids/".format(self.url, self.thread_unrelated.id), data={})
+        self.assertEqual(403, response.status_code)
+        # ok
+        response = self.client_authenticated.get("{0}{1}/get_removable_participants_ids/".format(self.url, self.thread1.id), data={})
+        self.assertEqual(200, response.status_code)
+        parsed = parse_json_response(response.data)
+        self.assertEqual(parsed["participants"], [3, 4, 5])
+
+    def test_mark_thread_as_read(self):
+        # no authentication
+        response = self.client_unauthenticated.post("{0}{1}/mark_thread_as_read/".format(self.url, self.thread1.id), data={})
+        self.assertEqual(403, response.status_code)
+        # no permission
+        response = self.client_authenticated.post("{0}{1}/mark_thread_as_read/".format(self.url, self.thread_unrelated.id), data={})
+        self.assertEqual(403, response.status_code)
+        # ok
+        response = self.client_authenticated.post("{0}{1}/mark_thread_as_read/".format(self.url, self.thread1.id), data={})
+        self.assertEqual(200, response.status_code)
+        parsed = parse_json_response(response.data)
+        self.assertEqual(parsed["id"], self.thread1.id)
 
 
 class MessageViewTests(TestScenario):
@@ -224,3 +267,21 @@ class TestMessageNotificationCheckView(TestScenario):
         reload_notification_check = NotificationCheck.objects.get(participant=self.participant1)
         self.assertEqual(reload_notification_check.id, self.notification_check.id)
         self.assertTrue(reload_notification_check.date_check > self.notification_check.date_check)
+
+
+class TestParticipantAuthenticationView(TestScenario):
+
+    def setUp(self):
+        super(TestParticipantAuthenticationView, self).setUp()
+        self.url = reverse('rest_messaging:authentication-list')
+
+    def test_get(self):
+        # no authentication
+        response_unauthenticated = self.client_unauthenticated.get(self.url)
+        self.assertEqual(403, response_unauthenticated.status_code)
+        # authentication
+        response_authenticated = self.client_authenticated.get(self.url)
+        self.assertEqual(200, response_authenticated.status_code)
+        participant_dct = parse_json_response(response_authenticated.data)
+        self.assertEqual(participant_dct['id'], self.participant1.id)
+        self.assertEqual(len(participant_dct.keys()), 1)

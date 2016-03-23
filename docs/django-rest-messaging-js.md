@@ -1,265 +1,143 @@
-<div class="badges">
-    <a href="http://travis-ci.org/raphaelgyory/django-rest-messaging">
-        <img src="https://travis-ci.org/raphaelgyory/django-rest-messaging.svg?branch=master">
-    </a>
-    <a href="https://pypi.python.org/pypi/django-rest-messaging">
-        <img src="https://img.shields.io/pypi/v/django-rest-messaging.svg">
-    </a>
-</div>
 
+# React: django-rest-messaging-js
 
-# REST: django-rest-messaging
-
-The django-rest-messaging module is the base of the project. It provides all the logic and entry points for the messaging service. 
+The django-rest-messaging-js module provides the javascript backend for the two other modules.
 
 ## Requirements
 
-* Python (2.7, 3.3, 3.4, 3.5)
-* Django (1.6, 1.7, 1.8, 1.9)
-* DRF (2.4, 3.0, 3.1, 3.2, 3.3, 3.4)
+Django-rest-messaging. Django-rest-messaging-centrifugo is optional.
 
 ## Installation
 
-Install using `pip`...
+The are two ways to integrate django-rest-messaging-js: using npm or simply loading from cdn ().
+
+In both cases, React, jQuery and Babel will be required. Centrifuge and sockjs are required if you want to use django-rest-messaging-centrifugo.
+
+
+### Using npm
 
 ```bash
-$ pip install django-rest-messaging
-# optionnal: if you want to browse the module's entrypoints
-$ pip install django-rest-swagger
+$ npm install django-rest-messaging-js --save
 ```
 
-Add the module to the installed apps.
+### Using the CDN file
 
-```python
+No installation is required, your view's template can load the file directly from . 
 
-# settings.py
-
-INSTALLED_APPS=(
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.sites',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    # ...
-    'rest_messaging',
-    # optional, if you want to browse the entrypoints
-    'rest_framework_swagger',
-)
-
+```html
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+	<script src="https://fb.me/react-0.14.0.js" type="text/javascript"></script>
+	<script src="https://fb.me/react-dom-0.14.0.js" type="text/javascript"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<script src="//cdn.jsdelivr.net/sockjs/1.0/sockjs.min.js" type="text/javascript"></script>
+	<script src="//rawgit.com/centrifugal/centrifuge-js/master/centrifuge.js"></script>
+	<!-- This is the js module -->
+	<script src='{% static "demo/django-rest-messaging-1.0.1.js" %}' type="text/javascript"></script>
+  	<!-- This is the example app you will have to build yourself (see next step), 
+  	with its associated css file -->
+  	<script src='{% static "demo/exampleApp.jsx" %}' type="text/babel"></script>
+	<link href='{% static "demo/django-rest-messaging-css.css" %}' rel="stylesheet" type="text/css" >
+</head>
 ```
 
-Add the django-rest-messaging middleware to your application.
+## Creating an application
 
-```python
 
-# settings.py
+You have two possibilities to create your application: create the whole application as a React object, or simply load the application's components separately into your html files. The first option is best if you create a React app. The other should be used if you integrate the the module to an existing app not using React. 
 
-MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    # (...) your other middlewares
-    'rest_messaging.middleware.MessagingMiddleware'
-)
+In both cases, Django-rest-messaging-js can be used more or less out of the box. Before digging into the application code, a quick tour of it's components will help you start.
 
+### Intro: django-rest-messaging-js components
+
+This is a quick tour since theses components are likely to evolve (a bit) in the next version of the django-rest-messaging-js.
+
+The components you can include without any modification:
+
+* MessagesForm: the form to post a message.
+* MessagesList: the messages in the selected thread.
+* MessagesLoadMore: the button allowing to load more messages in the selected thread.
+* MessagesManager: the manager of the whole application. It initialize data and connects to the sockets, allowing real-time messaging.
+* NotificationsCounter: returns the count of notifications.
+* ThreadsForm: the form handling threads creation. This form is coordinated with MessagesForm to prevent creation of empty threads.
+* ThreadsCreateLink: link to trigger the ThreadsForm to allow threads creation (example below).
+* ThreadsList: all the threads involving the user.
+* ThreadsLoadMore: the button allowing to load more threads.
+* ThreadsQuit: the link for quitting the selected thread.
+
+The listeners you should act upon:
+
+* loginListener: this listener should be called after the user logged in (with the user id) or out (with null). Django-rest-messaging-js will not query any information as long as the user is not logged in. (see example of use below). 
+* recipientsListener: this listener allows the display of user information along with the messages. It expects an array of objects containing the users' id, username and image (this behavior can be modified).
+
+
+### Option 1: React
+
+Once django-rest-messaging-js installed, it's components are available as properties of the DjangoRestMessaging object. Including the components can be done as follows:
+
+```javascript
+# exampleApp.jsx
+var React = require('react');
+var ReactDOM = require('react-dom');
+var DjangoRestMessaging = require('DjangoRestMessaging');
+var MessagesManager = DjangoRestMessaging.MessagesManager;
+
+var App = React.createClass({
+   render: function(){
+       return (
+    		<div>
+    			<MessagesManager />
+    			<!-- The rest of your code -->   
+   		    </div>
+       );
+   }
+});
 ```
 
-Add the project's urls.
+If you want more information on how to build an application using react, you can find a quick example [in the demo app](http://tox.readthedocs.org/en/latest/) (this is a simplistic example for use in an html app) or [in django-rest-messaging-js testing app](http://tox.readthedocs.org/en/latest/) (build entirely with react and webpack, with serveside loading example).
 
-```python
 
-# urls.py
+### Option 2: regular javascript
 
-urlpatterns = [
-	# (...) your other urls
-    url(r'^messaging/', include('rest_messaging.urls', namespace='rest_messaging')),
-    # optional, if you want to browse the entrypoints
-    url(r'^docs/', include('rest_framework_swagger.urls')),
-]
+You do not need advanced React.js skills to use the module this way, but you need basic javascript understanding.
 
+React uses the .jsx language. Practically, this means you will wrap your javascript within a 'text/babel' script.
+
+
+
+```html
+# the regular django template .html
+<div id="theIdOfTheHtmlTag"></div>
+<script type="text/babel">
+	ReactDOM.render(<TheNameOfTheComponent/>, document.getElementById('theIdOfTheHtmlTag'));
+</script>
 ```
 
-This is it. There are however a few settings you might want to change.
+Alternatively, you can write the javascript in a .jsx file, and load it in your html template.
 
-## Settings
-
-A few settings can be configured in your project's settings.py file:
-
-### Daily messages limit
-
-By default, django-rest-messaging does not limit the number of messages a participant can send. You can modify this behaviour by setting settings.REST_MESSAGING_DAILY_LIMIT_CALLBACK to a function that returns the max number of messages a user can send daily. For example:
-
-```python
-
-# my_module.my_file.py
-max_daily_messages(*args, **kwargs):
-    """ 
-    Your function will receive as arguments the Message (Django model) instance attributes.
-    It must return an integer defining the daily limit or None. 
-    """
-    # so for instance, if you whish to limit the number of messages to 50 every day
-    return 50
-
-
-# settings.py
-from my_module.my_file import max_daily_messages
-REST_MESSAGING_DAILY_LIMIT_CALLBACK = max_daily_messages
-
+```html
+# the regular django template .html
+<div id="theIdOfTheHtmlTag"></div>
+<script src='{% static "demo/exampleApp.jsx" %}' type="text/babel"></script>
+```
+```html
+# exampleApp.jsx
+ReactDOM.render(<TheNameOfTheComponent/>, document.getElementById('theIdOfTheHtmlTag'));
 ```
 
-### Filtering participants
-
-You can filter the participants that can be added to a thread. 
-By default, django-rest-messaging limits the number of participants to 10. You can modify this behaviour by setting settings.REST_MESSAGING_ADD_PARTICIPANTS_CALLBACK to a function that returns the acceptable users ids. For example:
-
-```python
-
-# my_module.my_file.py
-add_paricipants_filter(request, *participants_ids):
-    """ 
-    The function will receive as arguments 
-    1. the request and 
-    2. the ids of the participants that we try to add. 
-    It must return a list containing the ids of the users that can be added in the thread. 
-    """
-    # so for instance, if you whish to allow messaging only between staff members you could do
-    valid_ids = []
-    staf_ids = User.objects.filter(is_staff=True).values_list('id', flat=True)
-    for id in participants_ids:
-        if id in staf_ids:
-            valid_ids.append(id)
-    return valid_ids
+You can see a full example in the source code implementing django-rest-messaging-js in a html file in the [django-rest-messaging-js testing app](http://tox.readthedocs.org/en/latest/).
 
 
-# settings.py
-from my_module.my_file import add_paricipants_filter
-REST_MESSAGING_ADD_PARTICIPANTS_CALLBACK = add_paricipants_filter
+## CSS
 
-```
+Django-rest-messaging-js provides no styling, except for html tags. An example of styling can be found [in the css file of the testing app](http://tox.readthedocs.org/en/latest/)
 
-### Removing participants
+## TODO
 
-By default, django-rest-messaging allow participants to quit a thread. It does not allow a participant to remove another participant. You can modify this behaviour by setting settings.REST_MESSAGING_REMOVE_PARTICIPANTS_CALLBACK to a function that returns True if the participant may be removed, False otherwise. For example:
+Django-rest-messaging-js is an early release. The follwong realeases will focus on 3 points:
 
-```python
+* implementing the django SETTING options defined in django-rest-messaging;
 
-# my_module.my_file.py
-remove_paricipant_filter(request, *participants_ids):
-    """ 
-    The function will receive as arguments 
-    1. the request and 
-    2. the participant instance we wan to remove. 
-    It must return True if the participant can be remove, False otherwise. 
-    """
-    # so for instance, if admin only should be allowed to remove a user, we could do
-    if request.user.is_superuser:
-    	return True
-	return False
+* use SASS (for now, some classes use bootstrap, which is not optimal);
 
-# settings.py
-from my_module.my_file import remove_paricipant_filter
-REST_MESSAGING_REMOVE_PARTICIPANTS_CALLBACK = remove_paricipant_filter
-
-```
-
-### Allowing duplicate threads
-
-By default, django-rest-messaging will group messages involing the same participants. If one tries to create a thread involving participants that have already started a discussion, the message will be rattached to the existing thread. You can modify this behaviour by setting settings.REST_MESSAGING_THREAD_UNIQUE_FOR_ACTIVE_RECIPIENTS to False
-
-```python
-
-# settings.py
-REST_MESSAGING_THREAD_UNIQUE_FOR_ACTIVE_RECIPIENTS = False
-
-```
-
-### Add information about participants
-
-When serializing messages, django-rest-messaging will by default return them with a list containing the id of their readers. No additionnal information about these readers will be provided simply because it might not be available (ie, because the information about the User is saved in an unacessible database). You might want to change this behaviour, for instance by providing their username too. This can be done by setting settings.REST_MESSAGING_SERIALIZE_PARTICIPANTS_CALLBACK to a function that returns the desired serialized User object. The callback will be automatically called by the thread serializer, which will use it to render the information about the thread's participants. The tests.test_serializers module provides such an example:
-
-```python
-
-# this example is taken from tests.test_serializers.py
-# my_module.my_file.py
-
-class UserProfileSerializer(serializers.ModelSerializer):
-    """ Serializer for testing purpose only (for the ThreadSerializer callback). """
-
-    image = compat_serializer_method_field('get_image')
-    contact = compat_serializer_method_field('get_contact')
-
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'image', 'contact')
-
-    def get_image(self, obj):
-        return obj.profile.image
-
-    def get_contact(self, obj):
-        return obj.profile.contact
-
-def _thread_serializer_callback(thread_instance):
-    """ Shows how ThreadSerializer can get access to data about the users, beyond their simple ids. """
-    # we get all the participants' ids
-    participants_ids = [participant.id for participant in thread_instance.participants.all()]
-    # we can run the query we want usng this ids
-    # here we want the users and related information
-    users = User.objects.filter(id__in=participants_ids).select_related('profile')
-    # we call our custom serializer
-    serialized = UserProfileSerializer(users, many=True)
-    return serialized.data
-    
-
-# settings.py
-from my_module.my_file import _thread_serializer_callback
-REST_MESSAGING_SERIALIZE_PARTICIPANTS_CALLBACK = _thread_serializer_callback
-
-```
-
-## Entrypoints
-
-Entrypoint are available through django-rest-swagger.
-
-## Testing
-
-Install testing requirements.
-
-```bash
-$ pip install -r requirements.txt
-```
-
-Run with runtests.
-
-```bash
-$ ./runtests.py
-```
-
-You can also use the excellent [tox](http://tox.readthedocs.org/en/latest/) testing tool to run the tests against all supported versions of Python and Django. Install tox globally, and then simply run:
-
-```bash
-$ tox
-```
-
-## Documentation
-
-To build the documentation, you'll need to install `mkdocs`.
-
-```bash
-$ pip install mkdocs
-```
-
-To preview the documentation:
-
-```bash
-$ mkdocs serve
-Running at: http://127.0.0.1:8000/
-```
-
-To build the documentation:
-
-```bash
-$ mkdocs build
-```
+* do some js performance enhancements.

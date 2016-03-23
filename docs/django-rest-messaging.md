@@ -5,6 +5,9 @@
     <a href="https://pypi.python.org/pypi/django-rest-messaging">
         <img src="https://img.shields.io/pypi/v/django-rest-messaging.svg">
     </a>
+    <a href="https://coveralls.io/github/raphaelgyory/django-rest-messaging?branch=master">
+        <img src="https://coveralls.io/repos/github/raphaelgyory/django-rest-messaging/badge.svg?branch=master">
+    </a>
 </div>
 
 
@@ -24,8 +27,6 @@ Install using `pip`...
 
 ```bash
 $ pip install django-rest-messaging
-# optionnal: if you want to browse the module's entrypoints
-$ pip install django-rest-swagger
 ```
 
 Add the module to the installed apps.
@@ -43,8 +44,6 @@ INSTALLED_APPS=(
     'django.contrib.staticfiles',
     # ...
     'rest_messaging',
-    # optional, if you want to browse the entrypoints
-    'rest_framework_swagger',
 )
 
 ```
@@ -76,10 +75,14 @@ Add the project's urls.
 urlpatterns = [
 	# (...) your other urls
     url(r'^messaging/', include('rest_messaging.urls', namespace='rest_messaging')),
-    # optional, if you want to browse the entrypoints
-    url(r'^docs/', include('rest_framework_swagger.urls')),
 ]
 
+```
+
+Migrate
+
+```python
+$ manage.py migrate
 ```
 
 This is it. There are however a few settings you might want to change.
@@ -118,7 +121,7 @@ By default, django-rest-messaging limits the number of participants to 10. You c
 ```python
 
 # my_module.my_file.py
-add_paricipants_filter(request, *participants_ids):
+add_participants_filter(request, *participants_ids):
     """ 
     The function will receive as arguments 
     1. the request and 
@@ -127,41 +130,42 @@ add_paricipants_filter(request, *participants_ids):
     """
     # so for instance, if you whish to allow messaging only between staff members you could do
     valid_ids = []
-    staf_ids = User.objects.filter(is_staff=True).values_list('id', flat=True)
+    staff_ids = User.objects.filter(is_staff=True).values_list('id', flat=True)
     for id in participants_ids:
-        if id in staf_ids:
+        if id in staff_ids:
             valid_ids.append(id)
     return valid_ids
 
 
 # settings.py
 from my_module.my_file import add_paricipants_filter
-REST_MESSAGING_ADD_PARTICIPANTS_CALLBACK = add_paricipants_filter
+REST_MESSAGING_ADD_PARTICIPANTS_CALLBACK = add_participants_filter
 
 ```
 
 ### Removing participants
 
-By default, django-rest-messaging allow participants to quit a thread. It does not allow a participant to remove another participant. You can modify this behaviour by setting settings.REST_MESSAGING_REMOVE_PARTICIPANTS_CALLBACK to a function that returns True if the participant may be removed, False otherwise. For example:
+By default, django-rest-messaging allow participants to quit a thread. It does not allow a participant to remove another participant. You can modify this behaviour by setting settings.REST_MESSAGING_REMOVE_PARTICIPANTS_CALLBACK to a function that returns a list conatining the ids of the participant who may be removed. For example:
 
 ```python
 
 # my_module.my_file.py
-remove_paricipant_filter(request, *participants_ids):
+remove_participant_filter(request, participant, thread):
     """ 
     The function will receive as arguments 
     1. the request and 
     2. the participant instance we wan to remove. 
-    It must return True if the participant can be remove, False otherwise. 
+    It must return the ids of the participants that can be removed 
+    (or an empty list if no participant can be removed). 
     """
     # so for instance, if admin only should be allowed to remove a user, we could do
     if request.user.is_superuser:
-    	return True
-	return False
+    	return [participant.id]
+	return []
 
 # settings.py
-from my_module.my_file import remove_paricipant_filter
-REST_MESSAGING_REMOVE_PARTICIPANTS_CALLBACK = remove_paricipant_filter
+from my_module.my_file import remove_participant_filter
+REST_MESSAGING_REMOVE_PARTICIPANTS_CALLBACK = remove_participant_filter
 
 ```
 
@@ -178,7 +182,7 @@ REST_MESSAGING_THREAD_UNIQUE_FOR_ACTIVE_RECIPIENTS = False
 
 ### Add information about participants
 
-When serializing messages, django-rest-messaging will by default return them with a list containing the id of their readers. No additionnal information about these readers will be provided simply because it might not be available (ie, because the information about the User is saved in an unacessible database). You might want to change this behaviour, for instance by providing their username too. This can be done by setting settings.REST_MESSAGING_SERIALIZE_PARTICIPANTS_CALLBACK to a function that returns the desired serialized User object. The callback will be automatically called by the thread serializer, which will use it to render the information about the thread's participants. The tests.test_serializers module provides such an example:
+When serializing messages, django-rest-messaging will by default return them with a list containing the id of their readers. No additionnal information about these readers will be provided, because it might not be available (ie, because the information about the User is saved in another database). You might want to change this behaviour, for instance by providing their username too. This can be done by setting settings.REST_MESSAGING_SERIALIZE_PARTICIPANTS_CALLBACK to a function that returns the desired serialized User object. The callback will be automatically called by the thread serializer, which will use it to render the information about the thread's participants. The tests.test_serializers module provides such an example:
 
 ```python
 
@@ -202,10 +206,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return obj.profile.contact
 
 def _thread_serializer_callback(thread_instance):
-    """ Shows how ThreadSerializer can get access to data about the users, beyond their simple ids. """
+    """ 
+    Shows how ThreadSerializer can get access to data about the users, beyond their simple ids. 
+    """
     # we get all the participants' ids
     participants_ids = [participant.id for participant in thread_instance.participants.all()]
-    # we can run the query we want usng this ids
+    # we can run the query we want using these ids
     # here we want the users and related information
     users = User.objects.filter(id__in=participants_ids).select_related('profile')
     # we call our custom serializer
@@ -218,10 +224,6 @@ from my_module.my_file import _thread_serializer_callback
 REST_MESSAGING_SERIALIZE_PARTICIPANTS_CALLBACK = _thread_serializer_callback
 
 ```
-
-## Entrypoints
-
-Entrypoint are available through django-rest-swagger.
 
 ## Testing
 

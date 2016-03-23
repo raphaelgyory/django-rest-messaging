@@ -3,8 +3,10 @@
 # vim: set fileencoding=utf8 :
 
 from __future__ import unicode_literals
+from django.conf import settings
 from rest_framework import VERSION, serializers
 from rest_framework.response import Response
+from rest_messaging.pagination import MessagePagination
 
 
 DRFVLIST = [int(x) for x in VERSION.split(".")]
@@ -71,3 +73,17 @@ def compat_get_paginated_response(view, page):
     else:
         serializer = view.get_pagination_serializer(page)
         return Response(serializer.data)
+
+
+def compat_pagination_messages(cls):
+    """
+    For DRF 3.1 and higher, pagination is defined at the paginator level (see http://www.django-rest-framework.org/topics/3.2-announcement/).
+    For DRF 3.0 and lower, it can be handled at the view level.
+    """
+    if DRFVLIST[0] == 3 and DRFVLIST[1] >= 1:
+        setattr(cls, "pagination_class", MessagePagination)
+        return cls
+    else:
+        # DRF 2 pagination
+        setattr(cls, "paginate_by", getattr(settings, "DJANGO_REST_MESSAGING_MESSAGES_PAGE_SIZE", 30))
+        return cls

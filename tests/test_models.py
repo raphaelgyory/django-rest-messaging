@@ -63,14 +63,14 @@ class TestThread(TestScenario):
 
     def test_get_threads_where_participant_is_active(self):
         # participant 1 is active in thread 1, 2 and 3
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             threads = Thread.managers.get_threads_where_participant_is_active(self.participant1.id)
             self.assertEqual(set([self.thread1, self.thread2, self.thread3]), set(threads))  # ordering is indifferent
             self.assertEqual(3, len(threads))
         # participant 1 leave thread 1
         self.participation1.date_left = now()
         self.participation1.save()
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             threads = Thread.managers.get_threads_where_participant_is_active(self.participant1.id)
             self.assertEqual(set([self.thread2, self.thread3]), set(threads))  # ordering is indifferent
             self.assertEqual(2, len(threads))
@@ -98,7 +98,7 @@ class TestThread(TestScenario):
             self.assertEqual(2, threads4.count())
 
     def test_get_or_create_thread_unique(self):
-        # we set rest_messaging_participant, which is noemally done in the middleware
+        # we set rest_messaging_participant, which is normally done in the middleware
         setattr(self.request_authenticated, "rest_messaging_participant", self.participant1)
         # by default, threads are unique
         # if we ask the Thread for Participant 1, 2 and 3, we get self.thread1
@@ -117,7 +117,7 @@ class TestThread(TestScenario):
 
     @override_settings(REST_MESSAGING_THREAD_UNIQUE_FOR_ACTIVE_RECIPIENTS=False)
     def test_get_or_create_thread_multiple(self):
-        # we set rest_messaging_participant, which is noemally done in the middleware
+        # we set rest_messaging_participant, which is normally done in the middleware
         setattr(self.request_authenticated, "rest_messaging_participant", self.participant1)
         # we get the same as above but do not re-attach to older Thread instances
         with self.assertNumQueries(3):
@@ -125,11 +125,18 @@ class TestThread(TestScenario):
         self.assertNotEqual(thread.id, self.thread1.id)
         self.assertEqual(thread.id, Thread.objects.latest('id').id)
 
+    def test_get_or_create_thread_one_participant(self):
+        # we set rest_messaging_participant, which is normally done in the middleware
+        setattr(self.request_authenticated, "rest_messaging_participant", self.participant1)
+        # more than one participant is required, we raise an error
+        self.assertRaises(Exception, Thread.managers.get_or_create_thread, self.request_authenticated, None, self.participant1.id)
+
     def test_add_participants(self):
         # by default, a user will be authorized to add a participant if they are not yet in the thread
         # we add new and existing participants
         request = RequestFactory()
         request.user = self.user
+        request.rest_messaging_participant = Participant.objects.get(id=self.user.id)
         self.assertTrue(all(participant in [self.participant1, self.participant2, self.participant3] for participant in self.thread1.participants.all()))
         self.assertEqual(3, len(self.thread1.participants.all()))
         with self.assertNumQueries(2):
@@ -149,6 +156,7 @@ class TestThread(TestScenario):
         # this can be overriden
         request = RequestFactory()
         request.user = self.user
+        request.rest_messaging_participant = Participant.objects.get(id=self.user.id)
         self.assertTrue(all(participant in [self.participant1, self.participant2, self.participant3] for participant in self.thread1.participants.all()))
         self.assertEqual(3, len(self.thread1.participants.all()))
         self.thread1.add_participants(request, self.participant4, self.participant5)
@@ -207,7 +215,7 @@ class TestMessage(TestScenario):
         self.assertEqual(new.id, last.id + 1)
 
     def test_get_lasts_messages_of_threads(self):
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             messages = Message.managers.get_lasts_messages_of_threads(self.participant1.id, check_who_read=False, check_is_notification=False)
             # the messages are ordered from most recent to older
             self.assertEqual([self.m33.id, self.m22.id, self.m11.id], [m.id for m in messages])
@@ -227,7 +235,7 @@ class TestMessage(TestScenario):
         self.participation2.save()
         # we do not modify self.participation3.date_last_check
         # this means participant 1 and 2 have read the message, not 3
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             messages = Message.managers.get_lasts_messages_of_threads(self.participant1.id, check_who_read=True, check_is_notification=False)
             # the ordering has not been modified
             self.assertEqual([self.m33.id, self.m22.id, self.m11.id], [m.id for m in messages])
@@ -237,7 +245,7 @@ class TestMessage(TestScenario):
             self.assertFalse(self.participant3.id in messages[0].readers)
 
     def test_get_lasts_messages_of_threads_check_is_notification(self):
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             messages = Message.managers.get_lasts_messages_of_threads(self.participant1.id, check_who_read=False, check_is_notification=True)
             # the ordering has not been modified
             self.assertEqual([self.m33.id, self.m22.id, self.m11.id], [m.id for m in messages])
@@ -253,7 +261,7 @@ class TestMessage(TestScenario):
         self.participation2.date_last_check = now() + timedelta(days=1)
         self.participation2.save()
         # we create a notification check
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             messages = Message.managers.get_lasts_messages_of_threads(self.participant1.id, check_who_read=True, check_is_notification=True)
             # the ordering has not been modified
             self.assertEqual([self.m33.id, self.m22.id, self.m11.id], [m.id for m in messages])
