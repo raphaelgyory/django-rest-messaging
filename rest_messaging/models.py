@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.db import models
 from django.db.models import Count, Max
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import now, timedelta
 
