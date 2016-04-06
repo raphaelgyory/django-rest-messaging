@@ -98,10 +98,11 @@ By default, django-rest-messaging does not limit the number of messages a partic
 ```python
 
 # my_module.my_file.py
-max_daily_messages(*args, **kwargs):
+max_daily_messages(message_instance, *args, **kwargs):
     """ 
-    Your function will receive as arguments the Message (Django model) instance attributes.
-    It must return an integer defining the daily limit or None. 
+    Your function will receive as arguments the Message (Django model) instance, 
+    and the args and kwargs passed to the save method.
+    It must return an integer defining the daily limit, or None if there is no limitation. 
     """
     # so for instance, if you whish to limit the number of messages to 50 every day
     return 50
@@ -116,7 +117,7 @@ REST_MESSAGING_DAILY_LIMIT_CALLBACK = max_daily_messages
 ### Filtering participants
 
 You can filter the participants that can be added to a thread. 
-By default, django-rest-messaging limits the number of participants to 10. You can modify this behaviour by setting settings.REST_MESSAGING_ADD_PARTICIPANTS_CALLBACK to a function that returns the acceptable users ids. For example:
+By default, django-rest-messaging limits the number of participants to 10. You can modify this behaviour by setting settings.REST_MESSAGING_ADD_PARTICIPANTS_CALLBACK to a function that returns the acceptable participants ids. For example:
 
 ```python
 
@@ -126,7 +127,8 @@ add_participants_filter(request, *participants_ids):
     The function will receive as arguments 
     1. the request and 
     2. the ids of the participants that we try to add. 
-    It must return a list containing the ids of the users that can be added in the thread. 
+    It must return a list containing the ids of the participants
+    that can be added in the thread. 
     """
     # so for instance, if you whish to allow messaging only between staff members you could do
     valid_ids = []
@@ -145,7 +147,7 @@ REST_MESSAGING_ADD_PARTICIPANTS_CALLBACK = add_participants_filter
 
 ### Removing participants
 
-By default, django-rest-messaging allow participants to quit a thread. It does not allow a participant to remove another participant. You can modify this behaviour by setting settings.REST_MESSAGING_REMOVE_PARTICIPANTS_CALLBACK to a function that returns a list conatining the ids of the participant who may be removed. For example:
+By default, django-rest-messaging allow participants to quit a thread. It does not allow a participant to remove another participant. You can modify this behaviour by setting settings.REST_MESSAGING_REMOVE_PARTICIPANTS_CALLBACK to a function that returns a list containing the ids of the participant who may be removed. For example:
 
 ```python
 
@@ -154,11 +156,11 @@ remove_participant_filter(request, participant, thread):
     """ 
     The function will receive as arguments 
     1. the request and 
-    2. the participant instance we wan to remove. 
+    2. the participant instance we want to remove. 
     It must return the ids of the participants that can be removed 
     (or an empty list if no participant can be removed). 
     """
-    # so for instance, if admin only should be allowed to remove a user, we could do
+    # so for instance, if the admin only should be allowed to remove a user, we could do
     if request.user.is_superuser:
     	return [participant.id]
 	return []
@@ -182,7 +184,7 @@ REST_MESSAGING_THREAD_UNIQUE_FOR_ACTIVE_RECIPIENTS = False
 
 ### Add information about participants
 
-When serializing messages, django-rest-messaging will by default return them with a list containing the id of their readers. No additionnal information about these readers will be provided, because it might not be available (ie, because the information about the User is saved in another database). You might want to change this behaviour, for instance by providing their username too. This can be done by setting settings.REST_MESSAGING_SERIALIZE_PARTICIPANTS_CALLBACK to a function that returns the desired serialized User object. The callback will be automatically called by the thread serializer, which will use it to render the information about the thread's participants. The tests.test_serializers module provides such an example:
+When serializing messages, django-rest-messaging will by default return them with a list containing the id of their readers. No additionnal information about these readers will be provided, because it might not be available (ie, because the information about the User instance is saved in another database). You might want to change this behaviour, for instance by providing their username too. This can be done by setting settings.REST_MESSAGING_SERIALIZE_PARTICIPANTS_CALLBACK to a function that returns the desired serialized User object. The callback will be automatically called by the thread serializer, which will use it to render the information about the thread's participants. The tests.test_serializers module provides such an example:
 
 ```python
 

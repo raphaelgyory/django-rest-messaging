@@ -16,7 +16,7 @@
 
 The project provides a pluggable Facebook-like messaging service for Django Rest Framework.
 
-This is a first release. I coded this in a lean perspective and want to see if the project sparks some interest. Any comments and suggestions are therefore very welcome! you can find me on github or on [twitter](https://twitter.com/RaphaelGyory).
+This is a first release. I coded this in a lean perspective and want to see if the project sparks some interest. Any comments and suggestions are therefore very welcome! You can find me on [twitter](https://twitter.com/RaphaelGyory).
 
 ---
 
@@ -24,9 +24,9 @@ This is a first release. I coded this in a lean perspective and want to see if t
 
 The project is composed of three parts: 
 
-* [django-rest-messaging](http://tox.readthedocs.org/en/latest/) (rest messaging backend built with DRF),
-* [django-rest-messaging-centrifugo](http://tox.readthedocs.org/en/latest/) (allows you to build a real-time messaging service using websockets, by integrating django-rest-messaging and [centrifugo](https://github.com/centrifugal/centrifugo)), and 
-* [django-rest-messaging-js](http://tox.readthedocs.org/en/latest/), the javascript consumer.
+* [django-rest-messaging](/site/django-rest-messaging/) (rest messaging backend built with Django Rest Framework),
+* [django-rest-messaging-centrifugo](/site/django-rest-messaging-centrifugo/) (allows you to build a real-time messaging service using websockets, by integrating django-rest-messaging and [centrifugo](https://github.com/centrifugal/centrifugo)), and 
+* [django-rest-messaging-js](/site/django-rest-messaging-js/), the javascript consumer.
 
 ## Environment
 
@@ -40,7 +40,7 @@ Django-rest-messaging will work with Django 1.6 too.
 
 ## Installation, testing and documentation
 
-Start by installating the [REST backend](/django-rest-messaging/). Then you can optinally add the [real-time](/django-rest-messaging-centrifugo/) module and the [javascript consumer](/django-rest-messaging-js/). 
+Start by installating the [REST backend](/site/django-rest-messaging/). Then you can optinally add the [real-time](/site/django-rest-messaging-centrifugo/) module and the [javascript consumer](/site/django-rest-messaging-js/). 
 
 ## TODO
 

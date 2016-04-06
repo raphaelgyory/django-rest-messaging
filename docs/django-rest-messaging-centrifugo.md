@@ -78,7 +78,7 @@ $ centrifugo --config=/path/to/config.json --port=8802
 
 There are other command line options (address, engine etc.). See [here](https://fzambia.gitbooks.io/centrifugal/content/server/configuration.html).
 
-For information, you can see an additionnal example of how we launched centrifugo for the tests in django-rest-messaging-centrifugo/tests/test_integration.py (in setUpClass).
+For information, you can see an additionnal example of how we launched centrifugo for the tests [here](https://github.com/raphaelgyory/django-rest-messaging-centrifugo/blob/master/tests/test_integration.py) (in setUpClass).
 
 ### Install django-rest-messaging-centrifugo
 
@@ -147,7 +147,7 @@ urlpatterns = [
 
 ## Deployment
 
-Please refer to the centrifugo doc for [scaling](https://fzambia.gitbooks.io/centrifugal/content/deploy/nginx.html) and this discussion for [SSL configuration](https://github.com/centrifugal/centrifugo/issues/27).
+Centrifugo should run behind a proxy in production. Please refer to the centrifugo documentation for [deployment](https://fzambia.gitbooks.io/centrifugal/content/deploy/nginx.html).
 
 ## Testing
 

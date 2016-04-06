@@ -4,7 +4,7 @@ $( document ).ready(function() {
 	$('ul.navbar-nav').
 		not(".navbar-right").
 		append( '<li>' +
-		    '<a href="/messaging/js/django-rest-messaging-demo-production/">Demo</a>' +
+		    '<a href="/demo/django-rest-messaging-demo/">Demo</a>' +
         '</li>' );
 	
 	// do not deactivate next button
@@ -16,7 +16,7 @@ $( document ).ready(function() {
 		// we enable it
 		nextLi.attr('class', '');
 		// we set the link to the example
-		nextLi.html('<a href="/messaging/js/django-rest-messaging-demo-production/">'+
+		nextLi.html('<a href="/demo/django-rest-messaging-demo/">'+
 	            'Next <i class="fa fa-arrow-right"></i>'+
 	            '</a>');
 	}

@@ -8,3 +8,4 @@ pages:
 - REST: django-rest-messaging.md
 - Real-time: django-rest-messaging-centrifugo.md
 - React.js: django-rest-messaging-js.md
+copyright: <p class="text-muted">Xelles SPRL. 57 avenue Everard, 1190 Brussels, Belgium. VAT BE 0546.833.144. IBAN BE62 7320 3209 8361. BIC CREGBEBB.</p>
