@@ -6,8 +6,11 @@ from __future__ import unicode_literals
 from django.core.cache import cache
 from rest_messaging.models import Participant
 
+# Support Django < 1.10
+from django.utils.deprecation import MiddlewareMixin
 
-class MessagingMiddleware(object):
+
+class MessagingMiddleware(MiddlewareMixin):
     """
     Ensures we can access request.user as request.rest_messaging_participant in every request.
     """
