@@ -5,7 +5,7 @@ django-rest-messaging
 
 --------
 
-The project provides a Facebook-like messaging API for django rest framework. This module provides the python backend. You can get the documentation of the project and see a demo here: https://django-rest-messaging.raphaelgyory.com/site/.
+The project provides a Facebook-like messaging API for django rest framework. This module provides the python backend.
 
 .. |build-status-image| image:: https://secure.travis-ci.org/raphaelgyory/django-rest-messaging.svg?branch=master
    :target: http://travis-ci.org/raphaelgyory/django-rest-messaging?branch=master
