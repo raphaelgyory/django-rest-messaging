@@ -16,6 +16,6 @@ class IsInThread(permissions.BasePermission):
 
     def has_permission(self, request, view):
         """ We always required a logged in user. """
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             return True
         return False
