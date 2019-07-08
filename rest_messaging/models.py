@@ -294,7 +294,7 @@ class NotificationCheck(models.Model):
     """
     A timestamp everytime a user checks his notifications
     """
-    participant = models.OneToOneField(Participant)
+    participant = models.OneToOneField(Participant, on_delete=models.CASCADE)
     date_check = models.DateTimeField()
 
     def __str__(self):
