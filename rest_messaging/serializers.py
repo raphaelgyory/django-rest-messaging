@@ -75,3 +75,4 @@ class MessageNotificationCheckSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NotificationCheck
+        fields = '__all__'
