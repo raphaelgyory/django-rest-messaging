@@ -3,18 +3,19 @@ def pytest_configure():
     settings.configure(
         DEBUG_PROPAGATE_EXCEPTIONS=True,
         DATABASES={'default': {'ENGINE': 'django.db.backends.sqlite3',
-                               'NAME': ':memory:'}},
+                               'NAME': 'test_migrations.db'}},
         SITE_ID=1,
         SECRET_KEY='not very secret in tests',
         USE_I18N=True,
         USE_L10N=True,
         STATIC_URL='/static/',
         ROOT_URLCONF='tests.urls',
+        ALLOWED_HOSTS=['*'],
         TEMPLATE_LOADERS=(
             'django.template.loaders.filesystem.Loader',
             'django.template.loaders.app_directories.Loader',
         ),
-        MIDDLEWARE_CLASSES=(
+        MIDDLEWARE=(
             'django.middleware.common.CommonMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',

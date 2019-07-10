@@ -179,8 +179,8 @@ class Participation(models.Model):
     Links Participant to threads.
     Tells us when a participant has joined a Thread and when he left.
     """
-    participant = models.ForeignKey(Participant)
-    thread = models.ForeignKey(Thread)
+    participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
+    thread = models.ForeignKey(Thread, on_delete=models.CASCADE)
     date_joined = models.DateTimeField(auto_now_add=True)
     date_left = models.DateTimeField(null=True, blank=True)
     date_last_check = models.DateTimeField(null=True, blank=True)  # a timestamp to be set when a participant reads a thread
@@ -270,8 +270,8 @@ class Message(models.Model):
     """
 
     body = models.TextField(null=False)
-    sender = models.ForeignKey(Participant, null=False)
-    thread = models.ForeignKey(Thread)
+    sender = models.ForeignKey(Participant, null=False, on_delete=models.CASCADE)
+    thread = models.ForeignKey(Thread, on_delete=models.CASCADE)
     sent_at = models.DateTimeField(auto_now_add=True, blank=True)
     objects = models.Manager()
     managers = MessageManager()
@@ -294,7 +294,7 @@ class NotificationCheck(models.Model):
     """
     A timestamp everytime a user checks his notifications
     """
-    participant = models.OneToOneField(Participant)
+    participant = models.OneToOneField(Participant, on_delete=models.CASCADE)
     date_check = models.DateTimeField()
 
     def __str__(self):

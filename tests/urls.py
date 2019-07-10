@@ -7,5 +7,5 @@ from django.conf.urls import include, url
 
 
 urlpatterns = [
-    url(r'^messaging/', include('rest_messaging.urls', namespace='rest_messaging')),
+    url(r'^messaging/', include(('rest_messaging.urls', 'rest_messaging'), namespace='rest_messaging')),
 ]

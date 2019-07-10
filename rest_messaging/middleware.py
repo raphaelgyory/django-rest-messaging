@@ -5,9 +5,10 @@
 from __future__ import unicode_literals
 from django.core.cache import cache
 from rest_messaging.models import Participant
+from django.utils.deprecation import MiddlewareMixin
 
 
-class MessagingMiddleware(object):
+class MessagingMiddleware(MiddlewareMixin):
     """
     Ensures we can access request.user as request.rest_messaging_participant in every request.
     """
@@ -19,7 +20,7 @@ class MessagingMiddleware(object):
             "to be installed because request.user must be available."
         )
 
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
 
             participant = cache.get('rest_messaging_participant_{0}'.format(request.user.id), None)
 
